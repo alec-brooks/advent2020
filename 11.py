@@ -29,14 +29,14 @@ directions_to_check = [
 ]
 
 
+def is_inbound_and_target(x, y, seats, target):
+    return x >= 0 and x < len(seats) \
+        and y >= 0 and y < len(seats[0]) \
+        and seats[x][y] == target
+
+
 def count_adjacent(x, y, seats, target_count):
-    c = 0
-    for x2, y2 in directions_to_check:
-        if x+x2 >= 0 and x+x2 < len(seats) \
-                and y + y2 >= 0 and y+y2 < len(seats[0]) \
-                and seats[x+x2][y+y2] == target_count:
-            c += 1
-    return c
+    return sum([1 for dx, dy in directions_to_check if is_inbound_and_target(x+dx, y+dy, seats, target_count)])
 
 
 def line_of_sight(x, y, seats, target_count, dx, dy):
@@ -50,11 +50,7 @@ def line_of_sight(x, y, seats, target_count, dx, dy):
 
 
 def count_seen_seats(x, y, seats, target_count):
-    c = 0
-    for x2, y2 in directions_to_check:
-        if line_of_sight(x, y, seats, target_count, x2, y2):
-            c += 1
-    return c
+    return sum([1 for x2, y2 in directions_to_check if line_of_sight(x, y, seats, target_count, x2, y2)])
 
 
 def sum_occupied(seats):
