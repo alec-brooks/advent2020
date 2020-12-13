@@ -11,6 +11,7 @@ cardinal_directions = {
     EAST: (0, 1),
     WEST: (0, -1),
 }
+
 FORWARD = 'F'
 RIGHT = 'R'
 LEFT = 'L'
@@ -44,53 +45,62 @@ def manhattan_distance(moves_made):
     return sum([abs(sum(x)) for x in zip(*moves_made)])
 
 
-def ans1(navigation):
-    direction = cardinal_directions[EAST]
-    moves_made = []
-    for command in navigation:
-        operation, *number = command
-        n = int(''.join(number))
-        if operation in cardinal_directions:
-            moves_made.append([n * x for x in cardinal_directions[operation]])
-
-        if operation == FORWARD:
-            moves_made.append([n * x for x in direction])
-
-        if operation == RIGHT:
-            direction = r[n](*direction)
-
-        if operation == LEFT:
-            direction = l[n](*direction)
-
-    return manhattan_distance(moves_made)
+def parse_command(command):
+    operation, *number = command
+    n = int(''.join(number))
+    return operation, n
 
 
-def ans2(navigation):
-    moves_made = []
-    waypoint_relative = (1, 10)
-    for command in navigation:
-        operation, *number = command
-        n = int(''.join(number))
-        if operation in cardinal_directions:
-            dx, dy = [n * x for x in cardinal_directions[operation]]
-            waypoint_relative = (
-                waypoint_relative[0] + dx, waypoint_relative[1] + dy
-            )
+def ship_navigation(navigation, direction=cardinal_directions[EAST], moves_made=[]):
+    if navigation == []:
+        return manhattan_distance(moves_made)
+    command, *future_navigation = navigation
+    operation, n = parse_command(command)
 
-        if operation == FORWARD:
-            moves_made.append([n * x for x in waypoint_relative])
+    if operation in cardinal_directions:
+        new_moves = moves_made + \
+            [[n * x for x in cardinal_directions[operation]]]
+        return ship_navigation(future_navigation, direction, new_moves)
 
-        if operation == RIGHT:
-            waypoint_relative = r[n](*waypoint_relative)
-        if operation == LEFT:
-            waypoint_relative = l[n](*waypoint_relative)
-    return manhattan_distance(moves_made)
+    if operation == FORWARD:
+        new_moves = moves_made + [[n * x for x in direction]]
+        return ship_navigation(future_navigation, direction, new_moves)
+
+    if operation == RIGHT:
+        return ship_navigation(future_navigation, r[n](*direction), moves_made)
+
+    if operation == LEFT:
+        return ship_navigation(future_navigation, l[n](*direction), moves_made)
+
+
+def waypoint_navigation(navigation, waypoint_relative=(1, 10), moves_made=[]):
+    if navigation == []:
+        return manhattan_distance(moves_made)
+
+    command, *future_navigation = navigation
+    operation, n = parse_command(command)
+
+    if operation in cardinal_directions:
+        dx, dy = [n * x for x in cardinal_directions[operation]]
+        new_waypoint_relative = (
+            waypoint_relative[0] + dx, waypoint_relative[1] + dy
+        )
+        return waypoint_navigation(future_navigation, new_waypoint_relative, moves_made)
+
+    if operation == FORWARD:
+        new_moves = moves_made + [[n * x for x in waypoint_relative]]
+        return waypoint_navigation(future_navigation, waypoint_relative, new_moves)
+
+    if operation == RIGHT:
+        return waypoint_navigation(future_navigation, r[n](*waypoint_relative), moves_made)
+    if operation == LEFT:
+        return waypoint_navigation(future_navigation, l[n](*waypoint_relative), moves_made)
 
 
 def main():
     navigation = [x.strip() for x in sys.stdin]
-    print(ans1(navigation))
-    print(ans2(navigation))
+    print(ship_navigation(navigation))
+    print(waypoint_navigation(navigation))
 
 
 main()
